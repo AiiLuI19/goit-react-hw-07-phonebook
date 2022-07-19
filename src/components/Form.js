@@ -1,28 +1,29 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux/es/exports';
-import { addContact } from '../redux/contacts/actions';
-import { nanoid } from 'nanoid';
 import s from './Phonebook.module.css';
-import { filterContacts } from '../redux/contacts/selectors';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import {
+  useGetContactQuery,
+  useAddContactMutation,
+} from '../redux/contacts/contactsApi';
 
 const Form = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
-  const dispatch = useDispatch();
-  const contacts = useSelector(filterContacts);
-  const formSubmitHandler = data => {
+  const [addContacts] = useAddContactMutation();
+  const { data } = useGetContactQuery();
+
+  const formSubmitHandler = contact => {
     if (
-      contacts.some(
-        ({ name }) => name.toLowerCase() === data.name.toLowerCase()
+      data?.some(
+        ({ name }) => name.toLowerCase() === contact.name.toLowerCase()
       )
     ) {
-      Notify.warning(`${data.name} is already in contacts`);
+      Notify.warning(`${contact.name} is already in contacts`);
       return;
     }
-    data.id = nanoid();
-    dispatch(addContact(data));
+    addContacts(contact);
   };
+
   const handleChange = event => {
     const { name, value } = event.currentTarget;
     switch (name) {
@@ -42,7 +43,6 @@ const Form = () => {
   const handleSubmit = evt => {
     evt.preventDefault();
     const contact = {
-      id: nanoid(),
       name,
       number,
     };
